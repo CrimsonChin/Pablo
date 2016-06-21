@@ -12,5 +12,7 @@ namespace Pablo.ViewModels
         public string FileName => Path.GetFileName(FilePath);
 
         public string FilePath { get; }
+
+        public bool IsFavourite { get; set; }
     }
 }

@@ -17,8 +17,12 @@ namespace Pablo.ViewModels
         private readonly IDialogCoordinator _dialogCoordinator;
         private readonly DispatcherTimer _dispatcherTimer;
 
+        private IList<ImageViewModel> slideShowFiles;
+
         private ImageViewModel _selectedFile;
         private bool _isSlideShowPlaying;
+        private string _selectedFolder;
+        private bool _showSettings;
 
         #endregion
 
@@ -30,17 +34,23 @@ namespace Pablo.ViewModels
             _dispatcherTimer = new DispatcherTimer { Interval = new TimeSpan(0, 0, 3) };
             _dispatcherTimer.Tick += OnDispatcherTimerTick;
             FolderContents = new ObservableCollection<ImageViewModel>();
-            StartSlideshowCommand = new DelegateCommand(StartSlideshow);
+            PlayAllCommand = new DelegateCommand(PlayAll);
+            PlayFavoritesCommand = new DelegateCommand(PlayFavourites);
             ShowInputDialogCommand = new DelegateCommand(ShowDialogAndLoadImages);
+            ChangeFolderPathCommand = new DelegateCommand(LoadDirectory);
         }
 
         #endregion
-        
+
         #region Memebers
 
-        public ICommand StartSlideshowCommand { get; }
+        public ICommand PlayAllCommand { get; }
+
+        public ICommand PlayFavoritesCommand { get; }
 
         public ICommand ShowInputDialogCommand { get; }
+
+        public ICommand ChangeFolderPathCommand { get; }
 
         public ObservableCollection<ImageViewModel> FolderContents { get; }
 
@@ -55,6 +65,17 @@ namespace Pablo.ViewModels
             }
         }
 
+        public bool ShowSettings
+        {
+            get { return _showSettings; }
+
+            set
+            {
+                _showSettings = value;
+                OnPropertyChanged();
+            }
+        }
+
         #endregion
 
         #region Private Methods
@@ -65,14 +86,15 @@ namespace Pablo.ViewModels
                 return;
             }
 
-            var index = FolderContents.IndexOf(SelectedFile);
-            var nextIndex = ++index == FolderContents.Count ? 0 : index;
+            var index = slideShowFiles.IndexOf(SelectedFile);
+            var nextIndex = ++index == slideShowFiles.Count ? 0 : index;
 
-            SelectedFile = FolderContents[nextIndex];
+            SelectedFile = slideShowFiles[nextIndex];
         }
 
-        private void StartSlideshow()
+        private void SlideShow(IList<ImageViewModel> images)
         {
+            slideShowFiles = images;
             if (!_isSlideShowPlaying)
             {
                 _dispatcherTimer.Start();
@@ -85,25 +107,48 @@ namespace Pablo.ViewModels
             }
         }
 
+        private void PlayAll()
+        {
+            var slideShowFiles = FolderContents.ToList();
+            SlideShow(slideShowFiles);
+        }
+
+        private void PlayFavourites()
+        {
+            var slideShowFiles = FolderContents.Where(x => x.IsFavourite).ToList();
+            SlideShow(slideShowFiles);
+        }
+
         private async void ShowDialogAndLoadImages()
         {
             var folderPath = await _dialogCoordinator.ShowInputAsync(this, "Enter Folder Path",
-                "All images found below this directory will be loaded into Pablo.");
+                "Folder path can be changed by clicking \"Settings\" in the window top right.");
 
             if (!string.IsNullOrEmpty(folderPath))
             {
-                LoadDirectory(folderPath);
+                SelectedFolder = folderPath;
+                LoadDirectory();
             }
         }
 
-        private void LoadDirectory(string folderPath)
+        public string SelectedFolder
+        {
+            get { return _selectedFolder; }
+            set
+            {
+                _selectedFolder = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private void LoadDirectory()
         {
             FolderContents.Clear();
 
             // TODO use unity/inject service
             IFileService fileService = new FileService();
-            var extensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {".png", ".jpg", ".jpeg"};
-            foreach (var filePath in fileService.LoadFiles(folderPath, extensions))
+            var extensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".png", ".jpg", ".jpeg" };
+            foreach (var filePath in fileService.LoadFiles(SelectedFolder, extensions))
             {
                 var imageViewModel = new ImageViewModel(filePath);
                 FolderContents.Add(imageViewModel);

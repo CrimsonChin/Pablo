@@ -6,7 +6,7 @@
                       xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
                       xmlns:converters="clr-namespace:Pablo.Converters"
                       dialogs:DialogParticipation.Register="{Binding}"
-                      Title="Pable Image Viewer"
+                      Title="Pablo Image Viewer"
                       Height="600"
                       Width="800">
     <Window.Resources>
@@ -18,10 +18,34 @@
             <i:InvokeCommandAction Command="{Binding ShowInputDialogCommand}" />
         </i:EventTrigger>
     </i:Interaction.Triggers>
+
+    <controls:MetroWindow.RightWindowCommands>
+        <controls:WindowCommands>
+            <ToggleButton Content="Settings" IsChecked="{Binding ElementName=yourMahAppFlyout, Path=IsOpen}" Cursor="Hand"/>
+        </controls:WindowCommands>
+    </controls:MetroWindow.RightWindowCommands>
+    <controls:MetroWindow.Flyouts>
+        <controls:FlyoutsControl x:Name="flyoutsControl">
+            <controls:Flyout AnimateOpacity="True"
+                             CloseButtonIsCancel="True"
+                             Header="Settings"
+                             Position="Right"
+                             IsOpen="{Binding ShowSettings}"
+                             x:Name="yourMahAppFlyout">
+                <StackPanel Margin="10" Orientation="Vertical">
+                    <TextBox Text="{Binding SelectedFolder, Mode=TwoWay}" />
+                    <Button Content="Change"
+                            Command="{Binding ChangeFolderPathCommand}"/>
+                </StackPanel>
+            </controls:Flyout>
+        </controls:FlyoutsControl>
+    </controls:MetroWindow.Flyouts>
+
     <DockPanel>
         <DockPanel DockPanel.Dock="Bottom">
             <StackPanel DockPanel.Dock="Right">
-                <Button Content="Play" Width="Auto" Command="{Binding StartSlideshowCommand}"/>
+                <Button Content="Play" Width="Auto" Command="{Binding PlayAllCommand}"/>
+                <Button Content="Play Favorites" Width="Auto" Command="{Binding PlayFavoritesCommand}"/>
             </StackPanel>
             <ListView x:Name="AvailableFiles"
                     DockPanel.Dock="Left"
@@ -36,13 +60,43 @@
                 </ListView.ItemsPanel>
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <Border Width="50" Height="50" Margin="5">
-                            <Image Source="{Binding .FilePath, Converter={StaticResource UriToThumbnailConverter}}"
+
+                        <Grid>
+                            <CheckBox Panel.ZIndex="1"
+                                  HorizontalAlignment="Right"
+                                  VerticalAlignment="Top"
+                                      IsChecked="{Binding IsFavourite}">
+                                <CheckBox.Template>
+                                    <ControlTemplate TargetType="{x:Type ToggleButton}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Image>
+                                                <Image.Style>
+                                                    <Style>
+                                                        <Setter Property="Image.Source" Value="..\Images\Unchecked.png" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType={x:Type CheckBox}}}" Value="True">
+                                                                <Setter Property="Image.Source" Value="..\Images\Checked.png" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Image.Style>
+                                            </Image>
+                                            <ContentPresenter Content="{TemplateBinding Content}" 
+                                                              Margin="5,0,0,0" />
+                                        </StackPanel>
+                                    </ControlTemplate>
+                                </CheckBox.Template>
+                            </CheckBox>
+                            <Border Width="50" Height="50" Margin="5">
+                                <Image Source="{Binding .FilePath, Converter={StaticResource UriToThumbnailConverter}}"
                                    Stretch="UniformToFill"
                                    VerticalAlignment="Center"
                                    HorizontalAlignment="Center"
                                    ToolTip="{Binding FileName}"/>
-                        </Border>
+                            </Border>
+                        </Grid>
+
+
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
