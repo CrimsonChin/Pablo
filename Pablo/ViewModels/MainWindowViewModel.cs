@@ -23,6 +23,7 @@ namespace Pablo.ViewModels
         private bool _isSlideShowPlaying;
         private string _selectedFolder;
         private bool _showSettings;
+        private PersistenceService _persistenceService;
 
         #endregion
 
@@ -33,11 +34,21 @@ namespace Pablo.ViewModels
             _dialogCoordinator = dialogCoordinator;
             _dispatcherTimer = new DispatcherTimer { Interval = new TimeSpan(0, 0, 3) };
             _dispatcherTimer.Tick += OnDispatcherTimerTick;
+
             FolderContents = new ObservableCollection<ImageViewModel>();
+
+            _persistenceService = new PersistenceService();
+
             PlayAllCommand = new DelegateCommand(PlayAll);
             PlayFavoritesCommand = new DelegateCommand(PlayFavourites);
             ShowInputDialogCommand = new DelegateCommand(ShowDialogAndLoadImages);
             ChangeFolderPathCommand = new DelegateCommand(LoadDirectory);
+            SaveFavoritesCommand = new DelegateCommand(SaveFavorites);
+        }
+
+        private void SaveFavorites()
+        {
+            _persistenceService.Save(SelectedFolder, FolderContents.ToList());
         }
 
         #endregion
@@ -47,6 +58,8 @@ namespace Pablo.ViewModels
         public ICommand PlayAllCommand { get; }
 
         public ICommand PlayFavoritesCommand { get; }
+
+        public ICommand SaveFavoritesCommand { get; }
 
         public ICommand ShowInputDialogCommand { get; }
 
@@ -145,13 +158,20 @@ namespace Pablo.ViewModels
         {
             FolderContents.Clear();
 
-            // TODO use unity/inject service
+            var persistedFiles = _persistenceService.Load(SelectedFolder);
+
+            //TODO use unity / inject service
             IFileService fileService = new FileService();
             var extensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".png", ".jpg", ".jpeg" };
             foreach (var filePath in fileService.LoadFiles(SelectedFolder, extensions))
             {
-                var imageViewModel = new ImageViewModel(filePath);
-                FolderContents.Add(imageViewModel);
+                var persistedFile = persistedFiles
+                                        .Where(x => x.FilePath == filePath)
+                                        .Select(a => a)
+                                        .FirstOrDefault();
+
+                var image = persistedFile == null ? new ImageViewModel(filePath) : persistedFile;
+                FolderContents.Add(image);
             }
 
             SelectedFile = FolderContents.FirstOrDefault();

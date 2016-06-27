@@ -64,6 +64,8 @@
     <Compile Include="Classes\DelegateCommand.cs" />
     <Compile Include="Classes\FileService.cs" />
     <Compile Include="Classes\Interfaces\IFileService.cs" />
+    <Compile Include="Classes\Interfaces\IPersistenceService.cs" />
+    <Compile Include="Classes\PersistenceService.cs" />
     <Compile Include="Converters\UriToBitmapConverter.cs" />
     <Compile Include="Converters\UriToThumbnailConverter.cs" />
     <Compile Include="ViewModels\ImageViewModel.cs" />

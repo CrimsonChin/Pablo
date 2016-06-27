@@ -46,6 +46,7 @@
             <StackPanel DockPanel.Dock="Right">
                 <Button Content="Play" Width="Auto" Command="{Binding PlayAllCommand}"/>
                 <Button Content="Play Favorites" Width="Auto" Command="{Binding PlayFavoritesCommand}"/>
+                <Button Content="Save Favorites" Width="Auto" Command="{Binding SaveFavoritesCommand}"/>
             </StackPanel>
             <ListView x:Name="AvailableFiles"
                     DockPanel.Dock="Left"
