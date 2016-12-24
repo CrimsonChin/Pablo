@@ -19,7 +19,13 @@ namespace Pablo.Classes
             }
 
             var path = Path.Combine(directory, PersistenceFile);
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+
             favs.Save(path);
+            File.SetAttributes(path, File.GetAttributes(path) | FileAttributes.Hidden);
         }
 
         public IEnumerable<ImageViewModel> Load(string directory)
@@ -27,16 +33,18 @@ namespace Pablo.Classes
             var images = new List<ImageViewModel>();
 
             var path = Path.Combine(directory, PersistenceFile);
-            if (File.Exists(path))
+            if (File.Exists(path) == false)
             {
-                var persistenceDoc = XElement.Load(path);
-                foreach (var item in persistenceDoc.Elements())
+                return images;
+            }
+
+            var persistenceDoc = XElement.Load(path);
+            foreach (var item in persistenceDoc.Elements())
+            {
+                var imageViewModel = new ImageViewModel(item);
+                if (File.Exists(imageViewModel.FilePath))
                 {
-                    var imageViewModel = new ImageViewModel(item);
-                    if (File.Exists(imageViewModel.FilePath))
-                    {
-                        images.Add(imageViewModel);
-                    }
+                    images.Add(imageViewModel);
                 }
             }
 

@@ -166,7 +166,7 @@ namespace Pablo.ViewModels
             foreach (var filePath in fileService.LoadFiles(SelectedFolder, extensions))
             {
                 var persistedFile = persistedFiles
-                                        .Where(x => x.FilePath == filePath)
+                                        .Where(x => x.FilePath.ToLower() == filePath.ToLower())
                                         .Select(a => a)
                                         .FirstOrDefault();
 
