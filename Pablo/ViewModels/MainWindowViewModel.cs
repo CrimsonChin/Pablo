@@ -16,6 +16,7 @@ namespace Pablo.ViewModels
 
         private readonly IDialogCoordinator _dialogCoordinator;
         private readonly DispatcherTimer _dispatcherTimer;
+        private readonly PersistenceService _persistenceService;
 
         private IList<ImageViewModel> slideShowFiles;
 
@@ -23,7 +24,6 @@ namespace Pablo.ViewModels
         private bool _isSlideShowPlaying;
         private string _selectedFolder;
         private bool _showSettings;
-        private PersistenceService _persistenceService;
 
         #endregion
 
@@ -170,7 +170,7 @@ namespace Pablo.ViewModels
                                         .Select(a => a)
                                         .FirstOrDefault();
 
-                var image = persistedFile == null ? new ImageViewModel(filePath) : persistedFile;
+                var image = persistedFile ?? new ImageViewModel(filePath);
                 FolderContents.Add(image);
             }
 
